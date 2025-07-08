@@ -1,0 +1,38 @@
+[
+  {
+    "id": "8162a647-d23b-43c1-a78b-8b44e7c87859",
+    "participants": [
+      "209e2fd8-3659-4ab0-baa9-1f992931fbae",
+      "44086d26-c279-4ed7-a2a5-56a1677e47db"
+    ],
+    "updatedAt": "2025-07-08T17:23:30.587Z",
+    "type": "private",
+    "lastMessage": {
+      "id": "aa3ce2e8-057b-4372-9321-d929d8a87398",
+      "chatId": "8162a647-d23b-43c1-a78b-8b44e7c87859",
+      "senderId": "209e2fd8-3659-4ab0-baa9-1f992931fbae",
+      "content": "hi",
+      "timestamp": "2025-07-08T17:23:30.582Z",
+      "type": "text",
+      "status": "sent"
+    }
+  },
+  {
+    "id": "3e2e0177-7755-4a8a-8d20-02b5a5b687af",
+    "participants": [
+      "209e2fd8-3659-4ab0-baa9-1f992931fbae",
+      "f575a324-deb6-4bf0-a8da-027ecbb640dc"
+    ],
+    "updatedAt": "2025-07-08T17:24:58.511Z",
+    "type": "private",
+    "lastMessage": {
+      "id": "e6c0766c-dac6-41cb-a004-e2f52e150300",
+      "chatId": "3e2e0177-7755-4a8a-8d20-02b5a5b687af",
+      "senderId": "f575a324-deb6-4bf0-a8da-027ecbb640dc",
+      "content": "hi saji4",
+      "timestamp": "2025-07-08T17:24:58.507Z",
+      "type": "text",
+      "status": "sent"
+    }
+  }
+]
