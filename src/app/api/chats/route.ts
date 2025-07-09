@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Database } from '../../lib/database';
+import dbConnect from '../../lib/db';
+import Chat from '../../models/Chat';
 import { Auth } from '../../lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -16,21 +17,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
     
-    const chats = Database.getChatsByUser(decoded.userId);
+    await dbConnect();
     
-    // Get chat details with participant names
-    const chatsWithDetails = chats.map(chat => {
-      const otherParticipants = chat.participants.filter(p => p !== decoded.userId);
-      const participantDetails = otherParticipants.map(p => Database.getUserById(p)).filter(Boolean);
-      
-      return {
-        ...chat,
-        participantDetails,
-        lastMessage: chat.lastMessage
-      };
-    });
+    const chats = await Chat.find({ participants: decoded.userId })
+      .populate('participants', 'name email isOnline lastSeen')
+      .populate('lastMessage')
+      .sort({ updatedAt: -1 });
     
-    return NextResponse.json(chatsWithDetails);
+    return NextResponse.json(chats);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch chats' }, { status: 500 });
   }

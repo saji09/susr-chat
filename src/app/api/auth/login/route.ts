@@ -8,9 +8,9 @@ export async function POST(request: NextRequest) {
     const { user, token } = await Auth.login(email, password);
     
     return NextResponse.json({ user, token });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { error: 'Invalid credentials' },
+      { error: error.message || 'Invalid credentials' },
       { status: 401 }
     );
   }
