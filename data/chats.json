@@ -34,5 +34,59 @@
       "type": "text",
       "status": "sent"
     }
+  },
+  {
+    "id": "885763f5-54e6-4373-90ac-deb254462c30",
+    "participants": [
+      "686e1300fad3084c075b4d76",
+      "44086d26-c279-4ed7-a2a5-56a1677e47db"
+    ],
+    "updatedAt": "2025-07-09T07:22:05.409Z",
+    "type": "private",
+    "lastMessage": {
+      "id": "235839a9-7a16-455b-bc05-71fd5b390308",
+      "chatId": "885763f5-54e6-4373-90ac-deb254462c30",
+      "senderId": "686e1300fad3084c075b4d76",
+      "content": "Hello!",
+      "timestamp": "2025-07-09T07:22:05.407Z",
+      "type": "text",
+      "status": "sent"
+    }
+  },
+  {
+    "id": "1a728215-602b-42a8-aaa6-8ae8f984afdb",
+    "participants": [
+      "686e1300fad3084c075b4d76",
+      "f575a324-deb6-4bf0-a8da-027ecbb640dc"
+    ],
+    "updatedAt": "2025-07-09T07:22:07.878Z",
+    "type": "private",
+    "lastMessage": {
+      "id": "5c9b2050-9461-42f1-8a12-6ec1aa267564",
+      "chatId": "1a728215-602b-42a8-aaa6-8ae8f984afdb",
+      "senderId": "686e1300fad3084c075b4d76",
+      "content": "Hello!",
+      "timestamp": "2025-07-09T07:22:07.877Z",
+      "type": "text",
+      "status": "sent"
+    }
+  },
+  {
+    "id": "9fe93772-2477-484e-9928-539e023f3d01",
+    "participants": [
+      "686e1867f14cd24800a155fb",
+      "44086d26-c279-4ed7-a2a5-56a1677e47db"
+    ],
+    "updatedAt": "2025-07-09T07:21:33.146Z",
+    "type": "private",
+    "lastMessage": {
+      "id": "d22c665a-bf1f-4563-9a9a-6e95b4165fb0",
+      "chatId": "9fe93772-2477-484e-9928-539e023f3d01",
+      "senderId": "686e1867f14cd24800a155fb",
+      "content": "Hello!",
+      "timestamp": "2025-07-09T07:21:33.144Z",
+      "type": "text",
+      "status": "sent"
+    }
   }
 ]

@@ -1,106 +1,94 @@
-import fs from 'fs';
-import path from 'path';
-import { User, Message, Chat } from '../types';
-
-const dataDir = path.join(process.cwd(), 'data');
-
-// Ensure data directory exists
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Initialize JSON files if they don't exist
-const initializeFile = (filename: string, defaultData: any) => {
-  const filePath = path.join(dataDir, filename);
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
-  }
-};
-
-initializeFile('users.json', []);
-initializeFile('messages.json', []);
-initializeFile('chats.json', []);
+import mongoose from "mongoose";
+import User from "../models/User";
+import Chat from "../models/Chat";
+import Message from "../models/Message";
+import db from "./db";
 
 export class Database {
-  private static readFile<T>(filename: string): T[] {
-    const filePath = path.join(dataDir, filename);
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data);
-  }
-
-  private static writeFile<T>(filename: string, data: T[]): void {
-    const filePath = path.join(dataDir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  }
-
   // Users
-  static getUsers(): User[] {
-    return this.readFile<User>('users.json');
+  static async getUsers(): Promise<any[]> {
+    await db();
+    return User.find().select("-password").lean();
   }
 
-  static saveUser(user: User): void {
-    const users = this.getUsers();
-    const existingIndex = users.findIndex(u => u.id === user.id);
-    if (existingIndex >= 0) {
-      users[existingIndex] = user;
-    } else {
-      users.push(user);
-    }
-    this.writeFile('users.json', users);
+  static async saveUser(user: any): Promise<void> {
+    await db();
+    await User.findOneAndUpdate(
+      { _id: user._id || new mongoose.Types.ObjectId() },
+      user,
+      { upsert: true, new: true }
+    );
   }
 
-  static getUserByEmail(email: string): User | undefined {
-    const users = this.getUsers();
-    return users.find(u => u.email === email);
+  static async getUserByEmail(email: string): Promise<any | null> {
+    await db();
+    return User.findOne({ email }).select("+password").lean();
   }
 
-  static getUserById(id: string): User | undefined {
-    const users = this.getUsers();
-    return users.find(u => u.id === id);
+  static async getUserById(id: string): Promise<any | null> {
+    await db();
+    return User.findById(id).select("-password").lean();
   }
 
   // Messages
-  static getMessages(): Message[] {
-    return this.readFile<Message>('messages.json');
+  static async getMessages(): Promise<any[]> {
+    await db();
+    return Message.find().lean();
   }
 
-  static saveMessage(message: Message): void {
-    const messages = this.getMessages();
-    messages.push(message);
-    this.writeFile('messages.json', messages);
+  static async saveMessage(message: any): Promise<void> {
+    await db();
+    const newMessage = new Message(message);
+    await newMessage.save();
+
+    // Update chat's last message
+    await Chat.findByIdAndUpdate(message.chatId, {
+      lastMessage: newMessage._id,
+      updatedAt: new Date(),
+    });
   }
 
-  static getMessagesByChat(chatId: string): Message[] {
-    const messages = this.getMessages();
-    return messages.filter(m => m.chatId === chatId);
+  static async getMessagesByChat(chatId: string): Promise<any[]> {
+    await db();
+    return Message.find({ chatId })
+      .populate("senderId", "name email")
+      .sort({ timestamp: 1 })
+      .lean();
   }
 
   // Chats
-  static getChats(): Chat[] {
-    return this.readFile<Chat>('chats.json');
+  static async getChats(): Promise<any[]> {
+    await db();
+    return Chat.find()
+      .populate("participants", "name email isOnline lastSeen")
+      .populate("lastMessage")
+      .lean();
   }
 
-  static saveChat(chat: Chat): void {
-    const chats = this.getChats();
-    const existingIndex = chats.findIndex(c => c.id === chat.id);
-    if (existingIndex >= 0) {
-      chats[existingIndex] = chat;
-    } else {
-      chats.push(chat);
-    }
-    this.writeFile('chats.json', chats);
+  static async saveChat(chatData: any): Promise<any> {
+  await db();
+  const chat = new Chat(chatData);
+  await chat.save();
+  return chat;
+}
+
+static async getChatByParticipants(participantIds: string[]): Promise<any | null> {
+  await db();
+  return Chat.findOne({
+    participants: { $all: participantIds },
+    type: 'private'
+  })
+  .populate('participants', 'name email isOnline lastSeen')
+  .lean();
+}
+
+  static async getChatsByUser(userId: string): Promise<any[]> {
+    await db();
+    return Chat.find({ participants: userId })
+      .populate("participants", "name email isOnline lastSeen")
+      .populate("lastMessage")
+      .sort({ updatedAt: -1 })
+      .lean();
   }
 
-  static getChatsByUser(userId: string): Chat[] {
-    const chats = this.getChats();
-    return chats.filter(c => c.participants.includes(userId));
-  }
-
-  static getChatByParticipants(participants: string[]): Chat | undefined {
-    const chats = this.getChats();
-    return chats.find(c => 
-      c.participants.length === participants.length &&
-      participants.every(p => c.participants.includes(p))
-    );
-  }
 }

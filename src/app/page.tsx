@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Chat, Message, LoginData, RegisterData } from './types';
+import { User, Chat, Message } from './types';
 import LoginForm from './components/LoginForm';
 import ChatSidebar from './components/ChatSidebar';
 import ChatArea from './components/ChatArea';
@@ -16,7 +16,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  // Load user from localStorage on mount
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const savedToken = localStorage.getItem('token');
@@ -26,7 +25,6 @@ export default function Home() {
     }
   }, []);
 
-  // Fetch data when user is logged in
   useEffect(() => {
     if (user && token) {
       fetchChats();
@@ -34,10 +32,9 @@ export default function Home() {
     }
   }, [user, token]);
 
-  // Fetch messages when chat is selected
   useEffect(() => {
     if (selectedChat && token) {
-      fetchMessages(selectedChat.id);
+      fetchMessages(selectedChat._id);
     }
   }, [selectedChat, token]);
 
@@ -58,43 +55,45 @@ export default function Home() {
     return response.json();
   };
 
-  const handleLogin = async (data: LoginData) => {
-    try {
-      setIsLoading(true);
-      const response = await apiCall('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-      
-      setUser(response.user);
-      setToken(response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
-    } catch (error) {
-      alert('Login failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const handleLogin = async ({ email, password }: { email: string; password: string }) => {
+  try {
+    setIsLoading(true);
+    const response = await apiCall('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    });
 
-  const handleRegister = async (data: RegisterData) => {
-    try {
-      setIsLoading(true);
-      const response = await apiCall('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
-      
-      setUser(response.user);
-      setToken(response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      localStorage.setItem('token', response.token);
-    } catch (error) {
-      alert('Registration failed');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setUser(response.user);
+    setToken(response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('token', response.token);
+  } catch (error) {
+    console.error('Login failed:', error);
+    alert('Login failed');
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+const handleRegister = async ({ name, email, password }: { name: string; email: string; password: string }) => {
+  try {
+    setIsLoading(true);
+    const response = await apiCall('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({ name, email, password }),
+    });
+
+    setUser(response.user);
+    setToken(response.token);
+    localStorage.setItem('user', JSON.stringify(response.user));
+    localStorage.setItem('token', response.token);
+  } catch (error) {
+    console.error('Registration failed:', error);
+    alert('Registration failed');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const fetchChats = async () => {
     try {
@@ -130,7 +129,7 @@ export default function Home() {
       const response = await apiCall('/api/messages', {
         method: 'POST',
         body: JSON.stringify({
-          chatId: selectedChat.id,
+          chatId: selectedChat._id,
           content,
         }),
       });
@@ -142,35 +141,38 @@ export default function Home() {
     }
   };
 
-  const handleNewChat = async (userEmail: string) => {
-    try {
-      const response = await apiCall('/api/messages', {
-        method: 'POST',
-        body: JSON.stringify({
-          recipientEmail: userEmail,
-          content: 'Hello!',
-        }),
-      });
-
-      fetchChats(); // Refresh chats
-      
-      // Find and select the new chat
-      setTimeout(() => {
-        fetchChats().then(() => {
-          const newChat = chats.find(chat => 
-            chat.participants.some(p => 
-              users.find(u => u.email === userEmail)?.id === p
-            )
-          );
-          if (newChat) {
-            setSelectedChat(newChat);
-          }
-        });
-      }, 100);
-    } catch (error) {
-      console.error('Failed to create new chat:', error);
+  const handleNewChat = async (userId: string) => {
+  try {
+    if (!user?.id) {
+      throw new Error('User not authenticated');
     }
-  };
+
+    const response = await apiCall('/api/chats', {
+      method: 'POST',
+      body: JSON.stringify({
+        participants: [userId], // Current user will be added automatically by backend
+        type: 'private'
+      }),
+    });
+
+    // Update chats list
+    setChats(prev => {
+      // Check if chat already exists in state
+      const exists = prev.some(c => c._id === response._id);
+      return exists ? prev : [...prev, response];
+    });
+    
+    // Select the new chat
+    setSelectedChat(response);
+    setSidebarVisible(false);
+    
+    // Fetch initial messages
+    fetchMessages(response._id);
+  } catch (error) {
+    console.error('Failed to create new chat:', error);
+    alert(`Failed to create chat: ${error.message}`);
+  }
+};
 
   const handleLogout = () => {
     setUser(null);
@@ -185,7 +187,7 @@ export default function Home() {
 
   const handleChatSelect = (chat: Chat) => {
     setSelectedChat(chat);
-    setSidebarVisible(false); // Hide sidebar on mobile after selecting chat
+    setSidebarVisible(false);
   };
 
   if (!user) {
@@ -206,7 +208,7 @@ export default function Home() {
         users={users}
         onChatSelect={handleChatSelect}
         onNewChat={handleNewChat}
-        selectedChatId={selectedChat?.id}
+        selectedChatId={selectedChat?._id}
         onLogout={handleLogout}
         isVisible={sidebarVisible}
         onClose={() => setSidebarVisible(false)}

@@ -1,7 +1,6 @@
+import { Auth } from '@/app/lib/auth';
+import { Database } from '@/app/lib/database';
 import { NextRequest, NextResponse } from 'next/server';
-import { Database } from '../../lib/database';
-import { Auth } from '../../lib/auth';
-
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -16,9 +15,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
     
-    const users = Database.getUsers().filter(user => user.id !== decoded.userId);
+    const users = await Database.getUsers();
     return NextResponse.json(users);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    console.error('Error fetching users:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch users' }, 
+      { status: 500 }
+    );
   }
 }

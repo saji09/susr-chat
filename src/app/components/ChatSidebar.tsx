@@ -80,8 +80,8 @@ export default function ChatSidebar({
       <div className="chat-list">
         {chats.map(chat => (
           <div
-            key={chat.id}
-            className={`chat-item ${selectedChatId === chat.id ? 'active' : ''}`}
+            key={chat._id}
+            className={`chat-item ${selectedChatId === chat._id ? 'active' : ''}`}
             onClick={() => onChatSelect(chat)}
           >
             <div className="avatar">

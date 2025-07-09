@@ -1,39 +1,36 @@
-import mongoose from 'mongoose';
+import mongoose, { ConnectOptions } from 'mongoose';
 
+// Use type assertion since we already checked for undefined
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
 if (!MONGODB_URI) {
   throw new Error('Please define MONGODB_URI environment variable');
 }
 
-// Global cache
-const globalWithMongoose = global as typeof globalThis & {
-  mongoose: { conn: typeof mongoose | null; promise: Promise<typeof mongoose> | null };
-};
-
-let cached = globalWithMongoose.mongoose;
-
-if (!cached) {
-  cached = globalWithMongoose.mongoose = { conn: null, promise: null };
+interface Cached {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
 }
 
-async function dbConnect() {
+declare global {
+  var mongoose: Cached;
+}
+
+let cached = global.mongoose || { conn: null, promise: null };
+
+async function dbConnect(): Promise<typeof mongoose> {
   if (cached.conn) {
     return cached.conn;
   }
 
   if (!cached.promise) {
-    const opts = {
+    const opts: ConnectOptions = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 5000,
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then(mongoose => {
-      console.log('MongoDB connected successfully');
       return mongoose;
-    }).catch(err => {
-      console.error('MongoDB connection error:', err);
-      throw err;
     });
   }
 
